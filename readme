@@ -1,0 +1,5 @@
+this project is called Microcontroller which contains four sub-labs:
+the first lab is about writing a dataFilter based on Gaussian filter in C language
+the second lab consists about two assignment：1.AD-converter 2.PWM in C language
+the third lab is mainly about the communication between two PIC chips using SPI-protocal and achieving ADC-PWM function in C language
+the fourth lab consists of two digital FIR-Filter:high-pass and low-pass in assembly language
