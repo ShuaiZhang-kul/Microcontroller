@@ -1,0 +1,10 @@
+Error[122]   /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/newAsmTemplate.asm 4 : Illegal opcode (version)
+Warning[215] /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/newAsmTemplate.asm 9 : Processor superseded by command line.  Verify processor symbol.
+Message[301] /Applications/microchip/mplabx/v5.25/mpasmx/p18F2550.inc 34 : MESSAGE: (Processor-header file mismatch.  Verify selected processor.)
+Warning[207] /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/newAsmTemplate.asm 38 : Found label after column 1. (valueL)
+Warning[207] /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/newAsmTemplate.asm 39 : Found label after column 1. (valueH)
+Warning[207] /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/newAsmTemplate.asm 40 : Found label after column 1. (location)
+Warning[207] /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/newAsmTemplate.asm 41 : Found label after column 1. (location2)
+Warning[207] /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/newAsmTemplate.asm 42 : Found label after column 1. (SUBSL)
+Warning[207] /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/newAsmTemplate.asm 43 : Found label after column 1. (SUBSH)
+Warning[207] /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/newAsmTemplate.asm 260 : Found label after column 1. (initiate)

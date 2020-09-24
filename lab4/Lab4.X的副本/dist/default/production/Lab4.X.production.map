@@ -1,0 +1,82 @@
+MPLINK 5.09, LINKER
+Linker Map File - Created Thu Dec 12 08:46:12 2019
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+                   .org_0       code   0x001000    program   0x000004
+                   .cinit    romdata   0x001004    program   0x000002
+                   .org_1       code   0x001008    program   0x000004
+                   .org_2       code   0x001018    program   0x000004
+                   .org_3       code   0x001020    program   0x0001e4
+.config_300005_BUILD/DEFAULT/PRODUCTION/LAB.O    romdata   0x300005    program   0x000001
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x001000    0x001005      
+                            0x001008    0x00100b      
+                            0x001018    0x00101b      
+                            0x001020    0x001203      
+                            0x300005    0x300005      
+            499 out of 33048 program addresses used, program memory utilization is 1%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    START   0x001020    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 high_bit   0x001166    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 init_ADC   0x001082    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 init_FIR   0x0010a4    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 init_FSR   0x001182    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 init_PWM   0x001096    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                init_chip   0x00103c    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+               init_timer   0x001070    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                inter_ADC   0x0011cc    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+               inter_high   0x0011c8    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                inter_low   0x001200    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+               inter_tmr0   0x0011f2    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                  low_bit   0x001174    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                     main   0x00103a    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 max_duty   0x0011c2    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+          negative_detect   0x001154    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+          operation_after   0x001100    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+         operation_before   0x0010e4    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+refresh_input_buffer_after   0x0011a8    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+refresh_input_buffer_before   0x00118c    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+              second_term   0x001120    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+              subtraction   0x00113c    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                    START   0x001020    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                     main   0x00103a    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                init_chip   0x00103c    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+               init_timer   0x001070    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 init_ADC   0x001082    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 init_PWM   0x001096    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 init_FIR   0x0010a4    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+         operation_before   0x0010e4    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+          operation_after   0x001100    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+              second_term   0x001120    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+              subtraction   0x00113c    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+          negative_detect   0x001154    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 high_bit   0x001166    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                  low_bit   0x001174    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 init_FSR   0x001182    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+refresh_input_buffer_before   0x00118c    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+refresh_input_buffer_after   0x0011a8    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                 max_duty   0x0011c2    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+               inter_high   0x0011c8    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                inter_ADC   0x0011cc    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+               inter_tmr0   0x0011f2    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+                inter_low   0x001200    program     static /Users/shuaizhang/Desktop/Preparatory/Microcontroller/Lab/Lab4/Lab4.X/lab.asm
+
+

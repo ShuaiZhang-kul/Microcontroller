@@ -1,0 +1,1362 @@
+MPASM 5.84  /USERS/SHUAIZHANG/DESKTOP/PREPAR   12-5-2019  19:53:27         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;***********************************************************
+                      00002 ; File Header
+                      00003 ;***********************************************************
+                      00004 
+                      00005     list p=18F25k50, r=hex, n=0
+                      00006     #include <p18F25k50.inc>
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ; Build date : Mar 17 2019
+                      00005 ;  MPASM PIC18F25K50 processor include
+                      00006 ; 
+                      00007 ;  (c) Copyright 1999-2019 Microchip Technology, All rights reserved
+                      00008 ;==========================================================================
+                      00009 
+                      02208         LIST
+                      00007     
+  00000005            00008 outcome equ 0x05
+  00000006            00009 address equ 0x06    
+                      00010  
+                      00011     config SDOMX = RC7
+                      00012     
+                      00013 
+                      00014     
+                      00015 ;***********************************************************
+                      00016 ; Reset Vector
+                      00017 ;***********************************************************
+                      00018 
+                      00019     ORG     0x1000   ; Reset Vector
+                      00020            ; When debugging:0x000; when loading: 0x1000
+001000 EF?? F???      00021     goto    START
+                      00022 
+                      00023 
+                      00024 ;***********************************************************
+                      00025 ; Interrupt Vector
+                      00026 ;***********************************************************
+                      00027 
+                      00028     ORG     0x1008 ; Interrupt Vector  HIGH priority
+001008 EF?? F???      00029     goto    inter_high ; When debugging:0x008; when loading: 0x1008
+                      00030     ORG     0x1018 ; Interrupt Vector  HIGH priority
+001018 EF?? F???      00031     goto    inter_low ; When debugging:0x008; when loading: 0x1018
+                      00032 
+                      00033 
+                      00034 ;***********************************************************
+                      00035 ; Program Code Starts Here
+                      00036 ;***********************************************************
+                      00037 
+                      00038     ORG     0x1020 ; When debugging:0x020; when loading: 0x1020
+                      00039 
+001020                00040 START
+001020 EC?? F???      00041     call    init_chip  ; initialize ports and some other registers
+001024 EC?? F???      00042     call    init_timer  ; initialize timers
+001028 EC?? F???      00043     call    init_ADC  ; initialize A/D converter
+00102C EC?? F???      00044     call    init_PWM  ; initialize PWM module
+001030 EC?? F???      00045     call    init_FIR  ; initialize filter
+001034 8ED5           00046     bsf     T0CON, 7  ; TMR0ON, Enable Timer0
+001036 84BA           00047     bsf     T2CON, 2  ; TMR2ON, Enable Timer2
+001038 8EF2           00048     bsf     INTCON, 7  ; GIE, Enable interrupt
+                      00049     
+00103A                00050 main
+                      00051    ; bsf     PIR1,6
+00103A D???           00052     bra     main
+                      00053 
+00103C                00054 init_chip
+00103C 0E80           00055     movlw   0x80
+00103E 6E9B           00056     movwf   OSCTUNE
+001040 0E70           00057     movlw   0x70
+001042 6ED3           00058     movwf   OSCCON
+001044 0E10           00059     movlw   0x10
+001046 6ED2           00060     movwf   OSCCON2
+                      00061     
+001048 6A80           00062     clrf    PORTA   ; Initialize PORTA by clearing output data latches
+00104A 0EFF           00063     movlw   0xFF   ; Value used to initialize data direction
+00104C 6E92           00064     movwf   TRISA   ; Set PORTA as input
+00104E 0E00           00065     movlw   0x00   ; Configure comparators for digital input
+001050 6E98           00066     movwf   CM1CON0
+001052 6A81           00067     clrf    PORTB   ; Initialize PORTB by clearing output data latches
+001054 0E00           00068     movlw   0x00   ; Value used to initialize data direction
+001056 6E93           00069     movwf   TRISB   ; Set PORTB as output
+001058 6A82           00070     clrf    PORTC   ; Initialize PORTC by clearing output data latches
+00105A 6A94           00071     clrf    TRISC  ; define PORTC as outpnput
+00105C 9660           00072     bcf     UCON,3  ; to be sure to disable USB module
+00105E 8662           00073     bsf     UCFG,3  ; disable internal USB transceiver
+001060 6A06           00074     clrf    address
+001062 6A05           00075     clrf    outcome
+001064 0012           00076     return
+                      00077 
+001066                00078 init_timer
+001066 0E41           00079     movlw   0x41 ;Timer0 defines sample rate CHANGE THE LITERAL HERE!!!!!!!!!!!
+001068 6ED5           00080     movwf   T0CON ;Timer0 Control Register
+                      00081                  ;bit7 "0": Disable Timer
+                      00082                  ;bit6 "1": 8-bit timer
+                      00083                  ;bit5 "0": Internal clock
+                      00084                  ;bit4 "0": not important in Timer mode
+                      00085                  ;bit3 "0": Timer0 prescale is assigned
+                      00086                  ;bit2-0  : prescale=1:4 which means bit2-0: 001 
+                      00087     ;F = Fosc/(4*Prescale*number of counting)   F:sampling requency=12Khz, Fosc=48Mhz,prescale=4,number 
+                            of counting=250 
+00106A 6AD6           00088     clrf    TMR0L ;clear timer
+00106C 0E20           00089     movlw   0x20 ;Interrupt settings for Timer0
+00106E 6EF2           00090     movwf   INTCON ;Interrupt Control Register
+                      00091                  ;bit7 "0": Global interrupt Enable
+                      00092                  ;bit6 "0": Peripheral Interrupt Enable
+                      00093                  ;bit5 "1": Enables the TMR0 overflow interrupt
+                      00094                  ;bit4 "0": Disables the INT0 external interrupt
+                      00095                  ;bit3 "0": Disables the RB port change interrupt
+                      00096                  ;bit2 "0": TMR0 Overflow Interrupt Flag bit
+                      00097    ;bit1 "0": INT0 External Interrupt Flag bit
+                      00098    ;bit0 "0": RB Port Change Interrupt Flag bit
+001070 0E00           00099     movlw   0x00 ;Timer2 is used for PWM
+001072 6EBA           00100     movwf   T2CON ;Timer2 Control Register
+                      00101                  ;bit7 "0": unimplemented
+                      00102                  ;bit6-3 "0000": Postscale 1:1
+                      00103                  ;bit2 "0": Timer off
+                      00104                  ;bit1-0 "00": Prescale 1:1  
+001074 6ABC           00105     clrf    TMR2 ;clear timer
+001076 0012           00106     return
+                      00107 
+001078                00108 init_ADC
+001078 0E00           00109     movlw   0x00
+00107A 6EC1           00110     movwf   ADCON1 ;A/D Control Register 1
+                      00111    ;bit7-6 "00": unimplemented
+                      00112    ;bit5   "0": VSS as voltage reference
+                      00113    ;bit4   "0": VDD as voltage reference
+                      00114    ;bit3-0 "0000": all ports are analog input
+00107C 0E01           00115     movlw   0x01
+00107E 6EC2           00116     movwf   ADCON0 ;A/D Control Register 0
+                      00117    ;bit7-6 "00": unimplemented
+                      00118    ;bit5-2 "0000": Channel 0 (AN0)
+                      00119    ;bit1   "0": A/D idle, do not start conversion yet
+                      00120    ;bit0   "1": A/D converter module is enabled
+001080 0E36           00121     movlw   0x36
+001082 6EC0           00122     movwf   ADCON2 ;A/D Control Register 2
+                      00123    ;bit7   "0": left justified
+                      00124    ;bit6   "0": unimplemented
+                      00125    ;bit5-3 "110": A/D Acquisition Time is 16 Tad
+                      00126    ;bit2-0 "110": A/D Conversion Clock is Fosc/64
+001084 8CF2           00127     bsf     INTCON, 6 ;PEIE_GIEL bit, enables peripheral interrupts 
+001086 9C9E           00128     bcf     PIR1, 6 ;ADIF bit = flag bit
+001088 8C9D           00129     bsf     PIE1, 6 ;ADIE bit, enables the A/D interrupt
+00108A 0012           00130     return
+                      00131 
+00108C                00132 init_PWM
+00108C 0EFF           00133     movlw   0xFF
+00108E 6EBB           00134     movwf   PR2  ;PWM period = 255
+                      00135    ;Period = [(PR2+1)*4*Tosc*(TMR2 Prescale value)
+                      00136    ;= 256 * 4 * (1/48 MHz) * 1
+                      00137    ;= 21,33 µs (46,8 kHz)
+001090 0E0F           00138     movlw   0x0F
+001092 6E97           00139     movwf   CCP2CON ;Standard CCP2 control register
+                      00140    ;bit7-6 "00": unimplemented
+                      00141    ;bit5-4 "00": 2 LSBs of duty cycle (10-bit)
+                      00142    ;bit3-0 "1111": PWM mode
+001094 0E80           00143     movlw   D'128'
+001096 6E90           00144     movwf   CCPR2L ;Duty cycle = 128 to start with
+001098 0012           00145     return
+                      00146 
+00109A                00147 init_FIR
+                      00148     ; buffer of input samples starts at address 0x020
+00109A EE00 F020      00149     lfsr    0, 0x020 ; FSR0 is used for the input samples
+00109E 6A20           00150     clrf    0x20 ; now follows a buffer of 9 samples
+0010A0 6A21           00151     clrf    0x21 ; all cleared
+0010A2 6A22           00152     clrf    0x22
+0010A4 6A23           00153     clrf    0x23
+0010A6 6A24           00154     clrf    0x24
+0010A8 6A25           00155     clrf    0x25
+0010AA 6A26           00156     clrf    0x26
+0010AC 6A27           00157     clrf    0x27
+0010AE 6A28           00158     clrf    0x28
+                      00159  
+                      00160     ; table of filter coefficients starts at address 0x030
+0010B0 EE10 F030      00161     lfsr    1, 0x030 ; FSR1 is used for the filter coefficients
+0010B4 0E01           00162     movlw   D'1' ; b(0)
+0010B6 6E30           00163     movwf   0x30
+0010B8 0E08           00164     movlw   D'8' ; b(1)
+0010BA 6E31           00165     movwf   0x31
+0010BC 0E1C           00166     movlw   D'28' ; b(2)
+0010BE 6E32           00167     movwf   0x32
+0010C0 0E38           00168     movlw   D'56' ; b(3)
+0010C2 6E33           00169     movwf   0x33
+0010C4 0E45           00170     movlw   D'69' ; b(4)
+0010C6 6E34           00171     movwf   0x34
+0010C8 0E38           00172     movlw   D'56' ; b(5)
+0010CA 6E35           00173     movwf   0x35
+0010CC 0E1C           00174     movlw   D'28' ; b(6)
+0010CE 6E36           00175     movwf   0x36
+0010D0 0E08           00176     movlw   D'8' ; b(7)
+0010D2 6E37           00177     movwf   0x37
+0010D4 0E01           00178     movlw   D'1' ; b(8)
+0010D6 6E38           00179     movwf   0x38
+                      00180     
+0010D8 0012           00181     return
+                      00182     
+0010DA                00183 operation_before
+0010DA 50ED           00184     movf  POSTDEC0,W                     ;take the value from input buffer at current point then change 
+                            the address to the before
+0010DC 02E6           00185     mulwf POSTINC1                       ;multiply the value from coefficient buffer at start point then
+                             change the address to the next
+0010DE 50F4           00186     movf  PRODH,W
+0010E0 2605           00187     addwf outcome                        ;refresh the outcome register
+0010E2 0E20           00188     movlw 0x20
+0010E4 60E9           00189     CPFSLT FSR0L                         ;go back to 0x20 if value of FSR0L smaller than 0x20
+0010E6 EF?? F???      00190     goto operation_before
+0010EA EF?? F???      00191     goto operation_after
+                      00192     
+0010EE                00193 operation_after
+0010EE 0E20           00194     movlw 0x20
+0010F0 64E9           00195     CPFSGT FSR0L
+0010F2 EE00 F028      00196     lfsr    0, 0x028                     ;FSR0=0x28 which is at the end
+0010F6 50ED           00197     movf  POSTDEC0,W            
+0010F8 02E6           00198     mulwf POSTINC1              
+0010FA 50F4           00199     movf  PRODH,W
+0010FC 2605           00200     addwf outcome                        ;refresh the outcome register
+0010FE 0E38           00201     movlw  0x38
+001100 64E1           00202     CPFSGT FSR1L                         ;finish the operation if the FSR1 address is bigger than 0x38
+001102 EF?? F???      00203     goto operation_after
+001106 EE10 F030      00204     lfsr    1, 0x030                     ;initiate the FSR1
+00110A C006 FFE9      00205     movff address,FSR0L                 ;back to current address
+00110E 0012           00206     return
+                      00207     
+                      00208     
+001110                00209 inter_high
+001110 AC9E           00210     btfss   PIR1, 6                     ; ADIF bit, interrupt is caused by A/D converter
+001112 D???           00211     bra     inter_tmr0                  ; check next interrupt source
+001114                00212 inter_ADC
+001114 92C2           00213     bcf     ADCON0, 1                   ; GODONE bit, stop the A/D conversion
+001116 0E28           00214     movlw 0x28
+001118 60E9           00215     CPFSLT  FSR0L
+00111A EE00 F019      00216     lfsr    0, 0x019                    ;FSR0 to the beginning
+00111E 50C4           00217     movf    ADRESH, W                   ; read the value of the ADC (only upper 8 bits)
+001120 6EEC           00218     movwf   PREINC0                     ;Move the new value to next INDF0 
+001122 CFE9 F006      00219     movff   FSR0L,address
+001126 EC?? F???      00220     call operation_before
+00112A 5005           00221     movf outcome,W
+00112C 6E90           00222     movwf   CCPR2L                      ; and store it in the duty cycle register
+00112E 6A05           00223     clrf   outcome                      ;clear result register for next time usage
+                      00224                                         ; WRITE THE CODE FOR THE FIR FILTER BETWEEN THE TWO INSTRUCTIONS
+                             ABOVE!!!!!!!!!!!!!!!!
+001130 9C9E           00225     bcf     PIR1, 6                     ; ADIF bit has to be cleared
+001132 0010           00226     retfie
+                      00227     
+001134                00228 inter_tmr0
+001134 A4F2           00229     btfss   INTCON, 2                   ; TMR0IF, interrupt is caused by Timer0
+001136 0010           00230     retfie                              ; if not, then return
+001138 0E05           00231     movlw   D'5'                        ; this value sets the sample frequency (see formula in init_time
+                            r) CHANGE IT!!!!!!!!!!!!!
+00113A 6ED6           00232     movwf   TMR0L                       ; initialize timer again
+00113C 82C2           00233     bsf     ADCON0, 1                   ; GODONE bit, starts the A/D conversion
+00113E 94F2           00234     bcf     INTCON, 2                   ; clear interrupt flag
+001140 0010           00235     retfie
+                      00236 
+001142                00237 inter_low
+001142 0000           00238     nop
+001144 0010           00239     retfie
+                      00240 
+                      00241     END
+MPASM 5.84  /USERS/SHUAIZHANG/DESKTOP/PREPAR   12-5-2019  19:53:27         PAGE  2
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+A                                 00000000
+ABDEN                             00000000
+ABDOVF                            00000007
+ACCESS                            00000000
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ACKTIM                            00000007
+ACQT0                             00000003
+ACQT1                             00000004
+ACQT2                             00000005
+ACTCON                            00000FB5
+ACTD                              00000006
+ACTEN                             00000007
+ACTIE                             00000007
+ACTIF                             00000007
+ACTIP                             00000007
+ACTLOCK                           00000003
+ACTMD                             00000004
+ACTOR                             00000001
+ACTORS                            00000001
+ACTSEL                            00000007
+ACTSRC                            00000004
+ACTUD                             00000006
+ACTVIE                            00000002
+ACTVIF                            00000002
+ADCMD                             00000002
+ADCON0                            00000FC2
+ADCON1                            00000FC1
+ADCON2                            00000FC0
+ADCS0                             00000000
+ADCS1                             00000001
+ADCS2                             00000002
+ADDEN                             00000003
+ADDR0                             00000000
+ADDR1                             00000001
+ADDR2                             00000002
+ADDR3                             00000003
+ADDR4                             00000004
+ADDR5                             00000005
+ADDR6                             00000006
+ADEN                              00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADIP                              00000006
+ADON                              00000000
+ADRESH                            00000FC4
+ADRESL                            00000FC3
+AHEN                              00000001
+AN0                               00000000
+AN1                               00000001
+AN2                               00000002
+AN3                               00000003
+AN4                               00000005
+ANSA0                             00000000
+ANSA1                             00000001
+ANSA2                             00000002
+ANSA3                             00000003
+ANSA5                             00000005
+ANSB0                             00000000
+ANSB1                             00000001
+ANSB2                             00000002
+ANSB3                             00000003
+ANSB4                             00000004
+ANSB5                             00000005
+ANSC2                             00000002
+ANSC6                             00000006
+ANSC7                             00000007
+ANSELA                            00000F5B
+ANSELB                            00000F5C
+ANSELC                            00000F5D
+BANKED                            00000001
+BAUDCON                           00000FB8
+BAUDCON1                          00000FB8
+BCL1IE                            00000003
+BCL1IF                            00000003
+BCL1IP                            00000003
+BCLIE                             00000003
+BCLIF                             00000003
+BCLIP                             00000003
+BF                                00000000
+BGVST                             00000006
+BOEN                              00000004
+BOR                               00000000
+BRG0                              00000000
+BRG1                              00000001
+BRG10                             00000002
+BRG11                             00000003
+BRG12                             00000004
+BRG13                             00000005
+BRG14                             00000006
+BRG15                             00000007
+BRG16                             00000003
+BRG2                              00000002
+BRG3                              00000003
+BRG4                              00000004
+BRG5                              00000005
+BRG6                              00000006
+BRG7                              00000007
+BRG8                              00000000
+BRG9                              00000001
+BRGH                              00000002
+BSR                               00000FE0
+BTOEE                             00000004
+BTOEF                             00000004
+BTSEE                             00000007
+BTSEF                             00000007
+C                                 00000000
+C1CH0                             00000000
+C1CH1                             00000001
+C1HYS                             00000003
+C1IE                              00000006
+C1IF                              00000006
+C1IP                              00000006
+C1OE                              00000005
+C1ON                              00000007
+C1OUT                             00000006
+C1POL                             00000004
+C1R                               00000002
+C1RSEL                            00000005
+C1SP                              00000003
+C1SYNC                            00000001
+C1TSEL                            00000000
+C2CH0                             00000000
+C2CH1                             00000001
+C2HYS                             00000002
+C2IE                              00000005
+C2IF                              00000005
+C2IP                              00000005
+C2OE                              00000005
+C2ON                              00000007
+C2OUT                             00000006
+C2POL                             00000004
+C2R                               00000002
+C2RSEL                            00000004
+C2SP                              00000003
+C2SYNC                            00000000
+C2TSEL                            00000003
+CCH0                              00000000
+CCH1                              00000001
+CCP1                              00000002
+CCP1ASE                           00000007
+CCP1CON                           00000FBD
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1IP                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1MD                            00000000
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           00000F97
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2IP                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2MD                            00000001
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1                             00000FBE
+CCPR1H                            00000FBF
+CCPR1L                            00000FBE
+CCPR2                             00000F90
+CCPR2H                            00000F91
+CCPR2L                            00000F90
+CCPTMRS                           00000F59
+CFGS                              00000006
+CK                                00000006
+CKE                               00000006
+CKP                               00000004
+CKTXP                             00000004
+CM1CON0                           00000F98
+CM1IE                             00000006
+CM1IF                             00000006
+CM1IP                             00000006
+CM2CON0                           00000F99
+CM2CON1                           00000F9A
+CM2IE                             00000005
+CM2IF                             00000005
+CM2IP                             00000005
+CMP1MD                            00000003
+CMP2MD                            00000004
+COE                               00000005
+CON                               00000007
+COUT1                             00000006
+COUT2                             00000006
+CPOL                              00000004
+CRC16EE                           00000002
+CRC16EF                           00000002
+CRC5EE                            00000001
+CRC5EF                            00000001
+CREF                              00000002
+CREN                              00000004
+CSRC                              00000007
+CTMUCON0                          00000F8F
+CTMUCON1                          00000F8E
+CTMUCONH                          00000F8F
+CTMUCONL                          00000F8E
+CTMUEN                            00000007
+CTMUICON                          00000F88
+CTMUIE                            00000003
+CTMUIF                            00000003
+CTMUIP                            00000003
+CTMUMD                            00000005
+CTMUSIDL                          00000005
+CTTRIG                            00000000
+DACEN                             00000007
+DACLPS                            00000006
+DACNSS                            00000000
+DACOE                             00000005
+DACPSS0                           00000002
+DACPSS1                           00000003
+DACR0                             00000000
+DACR1                             00000001
+DACR2                             00000002
+DACR3                             00000003
+DACR4                             00000004
+DC                                00000001
+DC1B0                             00000004
+DC1B1                             00000005
+DC2B0                             00000004
+DC2B1                             00000005
+DDRA                              TRISA
+DDRB                              TRISB
+DDRC                              TRISC
+DDRD                              TRISD
+DDRE                              TRISE
+DFN8EE                            00000003
+DFN8EF                            00000003
+DHEN                              00000000
+DIR                               00000002
+DONE                              00000001
+DTRXP                             00000005
+D_NOT_A                           00000005
+ECCP1AS                           00000FB6
+ECCP1AS0                          00000004
+ECCP1AS1                          00000005
+ECCP1AS2                          00000006
+ECCP1ASE                          00000007
+ECCP1CON                          00000FBD
+ECCP1DEL                          00000FB7
+ECCP2CON                          00000F97
+EDG1POL                           00000004
+EDG1SEL0                          00000002
+EDG1SEL1                          00000003
+EDG1STAT                          00000000
+EDG2POL                           00000007
+EDG2SEL0                          00000005
+EDG2SEL1                          00000006
+EDG2STAT                          00000001
+EDGEN                             00000003
+EDGSEQEN                          00000002
+EEADR                             00000FA9
+EECON1                            00000FA6
+EECON2                            00000FA7
+EEDATA                            00000FA8
+EEIE                              00000004
+EEIF                              00000004
+EEIP                              00000004
+EEPGD                             00000007
+ENDP0                             00000003
+ENDP1                             00000004
+ENDP2                             00000005
+ENDP3                             00000006
+EPCONDIS                          00000003
+EPHSHK                            00000004
+EPINEN                            00000001
+EPOUTEN                           00000002
+EPSTALL                           00000000
+FAST                              00000001
+FERR                              00000002
+FLTS                              00000002
+FREE                              00000004
+FRM0                              00000000
+FRM1                              00000001
+FRM10                             00000002
+FRM2                              00000002
+FRM3                              00000003
+FRM4                              00000004
+FRM5                              00000005
+FRM6                              00000006
+FRM7                              00000007
+FRM8                              00000000
+FRM9                              00000001
+FSEN                              00000002
+FSR0                              00000000
+FSR0H                             00000FEA
+FSR0L                             00000FE9
+FSR1                              00000001
+FSR1H                             00000FE2
+FSR1L                             00000FE1
+FSR2                              00000002
+FSR2H                             00000FDA
+FSR2L                             00000FD9
+FVREN                             00000007
+FVRS0                             00000004
+FVRS1                             00000005
+FVRST                             00000006
+GCEN                              00000007
+GIE                               00000007
+GIEH                              00000007
+GIEL                              00000006
+GIE_GIEH                          00000007
+GO                                00000001
+GO_NOT_DONE                       00000001
+HFIOFR                            00000001
+HFIOFS                            00000002
+HLVDCON                           00000F9C
+HLVDEN                            00000004
+HLVDIE                            00000002
+HLVDIF                            00000002
+HLVDIN                            00000005
+HLVDIP                            00000002
+HLVDL0                            00000000
+HLVDL1                            00000001
+HLVDL2                            00000002
+HLVDL3                            00000003
+IDISSEN                           00000001
+IDLEIE                            00000004
+IDLEIF                            00000004
+IDLEN                             00000007
+INDF0                             00000FEF
+INDF1                             00000FE7
+INDF2                             00000FDF
+INT0                              00000000
+INT0E                             00000004
+INT0F                             00000001
+INT0IE                            00000004
+INT0IF                            00000001
+INT1                              00000001
+INT1E                             00000003
+INT1F                             00000000
+INT1IE                            00000003
+INT1IF                            00000000
+INT1IP                            00000006
+INT1P                             00000006
+INT2                              00000002
+INT2E                             00000004
+INT2F                             00000001
+INT2IE                            00000004
+INT2IF                            00000001
+INT2IP                            00000007
+INT2P                             00000007
+INTCON                            00000FF2
+INTCON2                           00000FF1
+INTCON3                           00000FF0
+INTEDG0                           00000006
+INTEDG1                           00000005
+INTEDG2                           00000004
+INTSRC                            00000005
+IOCB                              00000F86
+IOCB4                             00000004
+IOCB5                             00000005
+IOCB6                             00000006
+IOCB7                             00000007
+IOCC                              00000F87
+IOCC0                             00000000
+IOCC1                             00000001
+IOCC2                             00000002
+IOCC4                             00000004
+IOCC5                             00000005
+IOCC6                             00000006
+IOCC7                             00000007
+IOCIE                             00000003
+IOCIF                             00000000
+IOCIP                             00000000
+IPEN                              00000007
+IPR1                              00000F9F
+IPR2                              00000FA2
+IPR3                              00000FA5
+IRCF0                             00000004
+IRCF1                             00000005
+IRCF2                             00000006
+IRNG0                             00000000
+IRNG1                             00000001
+IRVST                             00000005
+ITRIM0                            00000002
+ITRIM1                            00000003
+ITRIM2                            00000004
+ITRIM3                            00000005
+ITRIM4                            00000006
+ITRIM5                            00000007
+LATA                              00000F89
+LATA0                             00000000
+LATA1                             00000001
+LATA2                             00000002
+LATA3                             00000003
+LATA4                             00000004
+LATA5                             00000005
+LATA6                             00000006
+LATA7                             00000007
+LATB                              00000F8A
+LATB0                             00000000
+LATB1                             00000001
+LATB2                             00000002
+LATB3                             00000003
+LATB4                             00000004
+LATB5                             00000005
+LATB6                             00000006
+LATB7                             00000007
+LATC                              00000F8B
+LATC0                             00000000
+LATC1                             00000001
+LATC2                             00000002
+LATC4                             00000004
+LATC5                             00000005
+LATC6                             00000006
+LATC7                             00000007
+LFIOFS                            00000000
+LVDIE                             00000002
+LVDIF                             00000002
+LVDIN                             00000005
+LVDIP                             00000002
+MC1OUT                            00000007
+MC2OUT                            00000006
+MSSP1MD                           00000006
+MSSPMD                            00000006
+N                                 00000004
+NOT_BOR                           00000000
+NOT_DONE                          00000001
+NOT_PD                            00000002
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RI                            00000004
+NOT_T1DONE                        00000003
+NOT_T1SYNC                        00000002
+NOT_T3DONE                        00000003
+NOT_T3SYNC                        00000002
+NOT_TO                            00000003
+NVCFG0                            00000000
+NVCFG1                            00000001
+OERR                              00000001
+ON                                00000007
+OSC2                              00000006
+OSCCON                            00000FD3
+OSCCON2                           00000FD2
+OSCFIE                            00000007
+OSCFIF                            00000007
+OSCFIP                            00000007
+OSCTUNE                           00000F9B
+OSTS                              00000003
+OV                                00000003
+P                                 00000004
+P1A                               00000002
+P1M0                              00000006
+P1M1                              00000007
+P1RSEN                            00000007
+PC                                00000FF9
+PCIE                              00000006
+PCL                               00000FF9
+PCLATH                            00000FFA
+PCLATU                            00000FFB
+PD                                00000002
+PDC0                              00000000
+PDC1                              00000001
+PDC2                              00000002
+PDC3                              00000003
+PDC4                              00000004
+PDC5                              00000005
+PDC6                              00000006
+PEIE                              00000006
+PEIE_GIEL                         00000006
+PEN                               00000002
+PGC                               00000006
+PGD                               00000007
+PGM                               00000005
+PIDEE                             00000000
+PIDEF                             00000000
+PIE1                              00000F9D
+PIE2                              00000FA0
+PIE3                              00000FA3
+PIR1                              00000F9E
+PIR2                              00000FA1
+PIR3                              00000FA4
+PKTDIS                            00000004
+PLLEN                             00000004
+PLLRDY                            00000007
+PLUSW0                            00000FEB
+PLUSW1                            00000FE3
+PLUSW2                            00000FDB
+PMD0                              00000F7E
+PMD1                              00000F7F
+POR                               00000001
+PORTA                             00000F80
+PORTB                             00000F81
+PORTC                             00000F82
+PORTE                             00000F84
+POSTDEC0                          00000FED
+POSTDEC1                          00000FE5
+POSTDEC2                          00000FDD
+POSTINC0                          00000FEE
+POSTINC1                          00000FE6
+POSTINC2                          00000FDE
+PPB0                              00000000
+PPB1                              00000001
+PPBI                              00000001
+PPBRST                            00000006
+PR1SEN                            00000007
+PR2                               00000FBB
+PREINC0                           00000FEC
+PREINC1                           00000FE4
+PREINC2                           00000FDC
+PRISD                             00000002
+PROD                              00000FF3
+PRODH                             00000FF4
+PRODL                             00000FF3
+PSA                               00000003
+PSS1AC0                           00000002
+PSS1AC1                           00000003
+PSS1BD0                           00000000
+PSS1BD1                           00000001
+PSSAC0                            00000002
+PSSAC1                            00000003
+PSSBD0                            00000000
+PSSBD1                            00000001
+PSTR1CON                          00000FB9
+PVCFG0                            00000002
+PVCFG1                            00000003
+PWM1CON                           00000FB7
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RA6                               00000006
+RA7                               00000007
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+RB7                               00000007
+RBPU                              00000007
+RC0                               00000000
+RC1                               00000001
+RC1IE                             00000005
+RC1IF                             00000005
+RC1IP                             00000005
+RC2                               00000002
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RCEN                              00000003
+RCIDL                             00000006
+RCIE                              00000005
+RCIF                              00000005
+RCIP                              00000005
+RCMT                              00000006
+RCON                              00000FD0
+RCREG                             00000FAE
+RCREG1                            00000FAE
+RCSTA                             00000FAB
+RCSTA1                            00000FAB
+RD                                00000000
+RD16                              00000001
+RE3                               00000003
+RESUME                            00000002
+RI                                00000004
+RSEN                              00000001
+RX                                00000007
+RX9                               00000006
+RX9D                              00000000
+RXDTP                             00000005
+R_NOT_W                           00000002
+S                                 00000003
+SBCDE                             00000002
+SBOREN                            00000006
+SCIE                              00000005
+SCKP                              00000004
+SCS0                              00000000
+SCS1                              00000001
+SDAHT                             00000003
+SE0                               00000005
+SEN                               00000000
+SENDB                             00000003
+SIDL                              00000005
+SLRA                              00000000
+SLRB                              00000001
+SLRC                              00000002
+SLRCON                            00000F7A
+SMP                               00000007
+SOFIE                             00000006
+SOFIF                             00000006
+SOSCEN                            00000003
+SOSCGO                            00000003
+SOSCRUN                           00000006
+SP0                               00000000
+SP1                               00000001
+SP2                               00000002
+SP3                               00000003
+SP4                               00000004
+SPBRG                             00000FAF
+SPBRG1                            00000FAF
+SPBRGH                            00000FB0
+SPBRGH1                           00000FB0
+SPEN                              00000007
+SPLLMULT                          00000007
+SRCLK0                            00000004
+SRCLK1                            00000005
+SRCLK2                            00000006
+SRCON0                            00000F58
+SRCON1                            00000F57
+SREN                              00000005
+SRLEN                             00000007
+SRNQEN                            00000002
+SRPR                              00000000
+SRPS                              00000001
+SRQEN                             00000003
+SRRC1E                            00000000
+SRRC2E                            00000001
+SRRCKE                            00000002
+SRRPE                             00000003
+SRSC1E                            00000004
+SRSC2E                            00000005
+SRSCKE                            00000006
+SRSPE                             00000007
+SSP1ADD                           00000FC8
+SSP1ADD0                          00000000
+SSP1ADD1                          00000001
+SSP1ADD2                          00000002
+SSP1ADD3                          00000003
+SSP1ADD4                          00000004
+SSP1ADD5                          00000005
+SSP1ADD6                          00000006
+SSP1ADD7                          00000007
+SSP1BUF                           00000FC9
+SSP1CON1                          00000FC6
+SSP1CON2                          00000FC5
+SSP1CON3                          00000FCB
+SSP1IE                            00000003
+SSP1IF                            00000003
+SSP1IP                            00000003
+SSP1MD                            00000006
+SSP1MSK                           00000FCA
+SSP1MSK0                          00000000
+SSP1MSK1                          00000001
+SSP1MSK2                          00000002
+SSP1MSK3                          00000003
+SSP1MSK4                          00000004
+SSP1MSK5                          00000005
+SSP1MSK6                          00000006
+SSP1MSK7                          00000007
+SSP1STAT                          00000FC7
+SSPADD                            00000FC8
+SSPBUF                            00000FC9
+SSPCON                            00000FC6
+SSPCON1                           00000FC6
+SSPCON2                           00000FC5
+SSPCON3                           00000FCB
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPIP                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPMSK                            00000FCA
+SSPOV                             00000006
+SSPSTAT                           00000FC7
+STALLIE                           00000005
+STALLIF                           00000005
+START                             00001020
+STATUS                            00000FD8
+STCON                             00000FB5
+STEN                              00000007
+STIE                              00000007
+STIF                              00000007
+STIP                              00000007
+STKFUL                            00000007
+STKOVF                            00000007
+STKPTR                            00000FFC
+STKUNF                            00000006
+STLOCK                            00000003
+STMD                              00000004
+STOR                              00000001
+STR1A                             00000000
+STR1B                             00000001
+STR1C                             00000002
+STR1D                             00000003
+STR1SYNC                          00000004
+STRA                              00000000
+STRB                              00000001
+STRC                              00000002
+STRD                              00000003
+STRSYNC                           00000004
+STSRC                             00000004
+STUD                              00000006
+SUSPND                            00000001
+SWDTE                             00000000
+SWDTEN                            00000000
+SYNC                              00000004
+T08BIT                            00000006
+T0CKI                             00000004
+T0CON                             00000FD5
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0IP                              00000002
+T0PS0                             00000000
+T0PS1                             00000001
+T0PS2                             00000002
+T0SE                              00000004
+T13CKI                            00000000
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000FCD
+T1DONE                            00000003
+T1GCON                            00000FCC
+T1GGO                             00000003
+T1GGO_NOT_DONE                    00000003
+T1GGO_NOT_T1DONE                  00000003
+T1GPOL                            00000006
+T1GSPM                            00000004
+T1GSS0                            00000000
+T1GSS1                            00000001
+T1GTM                             00000005
+T1GVAL                            00000002
+T1OSCEN                           00000003
+T1OSI                             00000001
+T1OSO                             00000000
+T1RD16                            00000001
+T1SOSCEN                          00000003
+T1SYNC                            00000002
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000FBA
+T2OUTPS0                          00000003
+T2OUTPS1                          00000004
+T2OUTPS2                          00000005
+T2OUTPS3                          00000006
+T3CKPS0                           00000004
+T3CKPS1                           00000005
+T3CON                             00000FB1
+T3DONE                            00000003
+T3GCON                            00000FB4
+T3GGO                             00000003
+T3GGO_NOT_DONE                    00000003
+T3GGO_NOT_T3DONE                  00000003
+T3GPOL                            00000006
+T3GSPM                            00000004
+T3GSS0                            00000000
+T3GSS1                            00000001
+T3GTM                             00000005
+T3GVAL                            00000002
+T3OSCEN                           00000003
+T3RD16                            00000001
+T3SOSCEN                          00000003
+T3SYNC                            00000002
+TABLAT                            00000FF5
+TBLPTR                            00000FF6
+TBLPTRH                           00000FF7
+TBLPTRL                           00000FF6
+TBLPTRU                           00000FF8
+TGEN                              00000004
+TMR0                              00000FD6
+TMR0H                             00000FD7
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR0IP                            00000002
+TMR0L                             00000FD6
+TMR0ON                            00000007
+TMR1                              00000FCE
+TMR1CS0                           00000006
+TMR1CS1                           00000007
+TMR1GE                            00000007
+TMR1GIE                           00000000
+TMR1GIF                           00000000
+TMR1GIP                           00000000
+TMR1H                             00000FCF
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1IP                            00000000
+TMR1L                             00000FCE
+TMR1MD                            00000000
+TMR1ON                            00000000
+TMR2                              00000FBC
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2IP                            00000001
+TMR2MD                            00000001
+TMR2ON                            00000002
+TMR3                              00000FB2
+TMR3CS0                           00000006
+TMR3CS1                           00000007
+TMR3GE                            00000007
+TMR3GIE                           00000001
+TMR3GIF                           00000001
+TMR3GIP                           00000001
+TMR3H                             00000FB3
+TMR3IE                            00000001
+TMR3IF                            00000001
+TMR3IP                            00000001
+TMR3L                             00000FB2
+TMR3MD                            00000002
+TMR3ON                            00000000
+TO                                00000003
+TOS                               00000FFD
+TOSH                              00000FFE
+TOSL                              00000FFD
+TOSU                              00000FFF
+TRIGEN                            00000000
+TRIGSEL                           00000007
+TRISA                             00000F92
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISA6                            00000006
+TRISA7                            00000007
+TRISB                             00000F93
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000F94
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRMT                              00000001
+TRNIE                             00000003
+TRNIF                             00000003
+TSEN                              00000003
+TSRNG                             00000002
+TUN0                              00000000
+TUN1                              00000001
+TUN2                              00000002
+TUN3                              00000003
+TUN4                              00000004
+TUN5                              00000005
+TUN6                              00000006
+TX                                00000006
+TX1IE                             00000004
+TX1IF                             00000004
+TX1IP                             00000004
+TX9                               00000006
+TX9D                              00000000
+TXCKP                             00000004
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXIP                              00000004
+TXREG                             00000FAD
+TXREG1                            00000FAD
+TXSTA                             00000FAC
+TXSTA1                            00000FAC
+UA                                00000001
+UADDR                             00000F63
+UART1MD                           00000006
+UARTMD                            00000006
+UCFG                              00000F62
+UCON                              00000F60
+UEIE                              00000F66
+UEIR                              00000F67
+UEP0                              00000F6A
+UEP1                              00000F6B
+UEP10                             00000F74
+UEP11                             00000F75
+UEP12                             00000F76
+UEP13                             00000F77
+UEP14                             00000F78
+UEP15                             00000F79
+UEP2                              00000F6C
+UEP3                              00000F6D
+UEP4                              00000F6E
+UEP5                              00000F6F
+UEP6                              00000F70
+UEP7                              00000F71
+UEP8                              00000F72
+UEP9                              00000F73
+UERRIE                            00000001
+UERRIF                            00000001
+UFRM                              00000F68
+UFRMH                             00000F69
+UFRML                             00000F68
+UIE                               00000F64
+UIR                               00000F65
+UOEMON                            00000006
+UPUEN                             00000004
+URSTIE                            00000000
+URSTIF                            00000000
+USBEN                             00000003
+USBIE                             00000002
+USBIF                             00000002
+USBIP                             00000002
+USBMD                             00000005
+USTAT                             00000F61
+UTEYE                             00000007
+UTRDIS                            00000003
+VDIRMAG                           00000007
+VREFCON0                          00000F7D
+VREFCON1                          00000F7C
+VREFCON2                          00000F7B
+VREFM                             00000002
+VREFP                             00000003
+VREGCON                           00000F5A
+W                                 00000000
+WCOL                              00000007
+WDTCON                            00000FD1
+WPUB                              00000F85
+WPUB0                             00000000
+WPUB1                             00000001
+WPUB2                             00000002
+WPUB3                             00000003
+WPUB4                             00000004
+WPUB5                             00000005
+WPUB6                             00000006
+WPUB7                             00000007
+WR                                00000001
+WREG                              00000FE8
+WREN                              00000002
+WRERR                             00000003
+WUE                               00000001
+Z                                 00000002
+_BOREN_NOSLP_2L                   000000FD
+_BOREN_OFF_2L                     000000F9
+_BOREN_ON_2L                      000000FB
+_BOREN_SBORDIS_2L                 000000FF
+_BORV_190_2L                      000000FF
+_BORV_220_2L                      000000F7
+_BORV_250_2L                      000000EF
+_BORV_285_2L                      000000E7
+_CCP2MX_RB3_3H                    000000FE
+_CCP2MX_RC1_3H                    000000FF
+_CFGPLLEN_OFF_1L                  000000FD
+_CFGPLLEN_ON_1L                   000000FF
+_CONFIG1H                         00300001
+_CONFIG1L                         00300000
+_CONFIG2H                         00300003
+_CONFIG2L                         00300002
+_CONFIG3H                         00300005
+_CONFIG4L                         00300006
+_CONFIG5H                         00300009
+_CONFIG5L                         00300008
+_CONFIG6H                         0030000B
+_CONFIG6L                         0030000A
+_CONFIG7H                         0030000D
+_CONFIG7L                         0030000C
+_CP0_OFF_5L                       000000FF
+_CP0_ON_5L                        000000FE
+_CP1_OFF_5L                       000000FF
+_CP1_ON_5L                        000000FD
+_CP2_OFF_5L                       000000FF
+_CP2_ON_5L                        000000FB
+_CP3_OFF_5L                       000000FF
+_CP3_ON_5L                        000000F7
+_CPB_OFF_5H                       000000FF
+_CPB_ON_5H                        000000BF
+_CPD_OFF_5H                       000000FF
+_CPD_ON_5H                        0000007F
+_CPUDIV_CLKDIV2_1L                000000EF
+_CPUDIV_CLKDIV3_1L                000000F7
+_CPUDIV_CLKDIV6_1L                000000FF
+_CPUDIV_NOCLKDIV_1L               000000E7
+_DEBUG_OFF_4L                     000000FF
+_DEBUG_ON_4L                      0000007F
+_DEVID1                           003FFFFE
+_DEVID2                           003FFFFF
+_EBTR0_OFF_7L                     000000FF
+_EBTR0_ON_7L                      000000FE
+_EBTR1_OFF_7L                     000000FF
+_EBTR1_ON_7L                      000000FD
+_EBTR2_OFF_7L                     000000FF
+_EBTR2_ON_7L                      000000FB
+_EBTR3_OFF_7L                     000000FF
+_EBTR3_ON_7L                      000000F7
+_EBTRB_OFF_7H                     000000FF
+_EBTRB_ON_7H                      000000BF
+_FCMEN_OFF_1H                     000000BF
+_FCMEN_ON_1H                      000000FF
+_FOSC_ECHCLKO_1H                  000000F4
+_FOSC_ECHIO_1H                    000000F5
+_FOSC_ECLCLKO_1H                  000000FC
+_FOSC_ECLIO_1H                    000000FD
+_FOSC_ECMCLKO_1H                  000000FA
+_FOSC_ECMIO_1H                    000000FB
+_FOSC_HSH_1H                      000000F2
+_FOSC_HSM_1H                      000000F3
+_FOSC_INTOSCCLKO_1H               000000F9
+_FOSC_INTOSCIO_1H                 000000F8
+_FOSC_LP_1H                       000000F0
+_FOSC_RCCLKO_1H                   000000F6
+_FOSC_RCIO_1H                     000000F7
+_FOSC_XT_1H                       000000F1
+_ICPRT_OFF_4L                     000000DF
+_IDLOC0                           00200000
+_IDLOC1                           00200001
+_IDLOC2                           00200002
+_IDLOC3                           00200003
+_IDLOC4                           00200004
+_IDLOC5                           00200005
+_IDLOC6                           00200006
+_IDLOC7                           00200007
+_IESO_OFF_1H                      0000007F
+_IESO_ON_1H                       000000FF
+_LS48MHZ_SYS24X4_1L               000000DF
+_LS48MHZ_SYS48X8_1L               000000FF
+_LVP_OFF_4L                       000000FB
+_LVP_ON_4L                        000000FF
+_MCLRE_OFF_3H                     0000007F
+_MCLRE_ON_3H                      000000FF
+_PBADEN_OFF_3H                    000000FD
+_PBADEN_ON_3H                     000000FF
+_PCLKEN_OFF_1H                    000000DF
+_PCLKEN_ON_1H                     000000FF
+_PLLSEL_PLL3X_1L                  000000FF
+_PLLSEL_PLL4X_1L                  000000FE
+_SDOMX_RB3_3H                     000000FF
+_SDOMX_RC7_3H                     000000BF
+_STVREN_OFF_4L                    000000FE
+_STVREN_ON_4L                     000000FF
+_T3CMX_RB5_3H                     000000EF
+_T3CMX_RC0_3H                     000000FF
+_WDTEN_NOSLP_2H                   000000FD
+_WDTEN_OFF_2H                     000000FC
+_WDTEN_ON_2H                      000000FF
+_WDTEN_SWON_2H                    000000FE
+_WDTPS_1024_2H                    000000EB
+_WDTPS_128_2H                     000000DF
+_WDTPS_16384_2H                   000000FB
+_WDTPS_16_2H                      000000D3
+_WDTPS_1_2H                       000000C3
+_WDTPS_2048_2H                    000000EF
+_WDTPS_256_2H                     000000E3
+_WDTPS_2_2H                       000000C7
+_WDTPS_32768_2H                   000000FF
+_WDTPS_32_2H                      000000D7
+_WDTPS_4096_2H                    000000F3
+_WDTPS_4_2H                       000000CB
+_WDTPS_512_2H                     000000E7
+_WDTPS_64_2H                      000000DB
+_WDTPS_8192_2H                    000000F7
+_WDTPS_8_2H                       000000CF
+_WRT0_OFF_6L                      000000FF
+_WRT0_ON_6L                       000000FE
+_WRT1_OFF_6L                      000000FF
+_WRT1_ON_6L                       000000FD
+_WRT2_OFF_6L                      000000FF
+_WRT2_ON_6L                       000000FB
+_WRT3_OFF_6L                      000000FF
+_WRT3_ON_6L                       000000F7
+_WRTB_OFF_6H                      000000FF
+_WRTB_ON_6H                       000000BF
+_WRTC_OFF_6H                      000000FF
+_WRTC_ON_6H                       000000DF
+_WRTD_OFF_6H                      000000FF
+_WRTD_ON_6H                       0000007F
+_XINST_OFF_4L                     000000BF
+_XINST_ON_4L                      000000FF
+__18F25K50                        00000001
+_nLPBOR_OFF_2L                    000000FF
+_nLPBOR_ON_2L                     000000BF
+_nPWRTEN_OFF_2L                   000000FF
+_nPWRTEN_ON_2L                    000000FE
+address                           00000006
+init_ADC                          00001078
+init_FIR                          0000109A
+init_PWM                          0000108C
+init_chip                         0000103C
+init_timer                        00001066
+inter_ADC                         00001114
+inter_high                        00001110
+inter_low                         00001142
+inter_tmr0                        00001134
+main                              0000103A
+operation_after                   000010EE
+operation_before                  000010DA
+outcome                           00000005
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+
